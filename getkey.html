@@ -36,7 +36,6 @@
             <input type="text" id="hwid" placeholder="Dán HWID từ App vào đây...">
         </div>
 
-        <!-- Ô chọn thời hạn (Chỉ hiện khi ở Chế độ Admin) -->
         <div class="input-group" id="adminDaysGroup" style="display:none;">
             <label for="expireDays">Thời hạn gia hạn:</label>
             <select id="expireDays">
@@ -59,11 +58,10 @@
     </div>
 
     <script>
-        const SHORTENER_DOMAIN = "link4m"; // Tên miền trang rút gọn link
-        const ADMIN_PASS = "1234";          // Mật khẩu Admin
+        const SECRET_TOKEN = "TMG2026";
+        const ADMIN_PASS = "1234";
         let isAdminUser = false;
 
-        // Định dạng ngày YYYYMMDD
         function formatDate(dateObj) {
             const year = dateObj.getFullYear();
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -71,16 +69,12 @@
             return `${year}${month}${day}`;
         }
 
-        // Tính toán Key chuẩn: KEY-[YYYYMMDD_HẾT_HẠN]-[HASH8]
         function generateKey(hwidValue, daysToAdd) {
             const secretSalt = "@TMG_Key_2026";
-            
-            // Tính ngày hết hạn
             const expireDate = new Date();
             expireDate.setDate(expireDate.getDate() + (parseInt(daysToAdd) - 1));
             const expireStr = formatDate(expireDate);
 
-            // Tạo mã Hash MD5 từ HWID + Ngày hết hạn + Salt
             const rawString = hwidValue + expireStr + secretSalt;
             const hash = CryptoJS.MD5(rawString).toString().substring(0, 8).toUpperCase();
 
@@ -112,10 +106,10 @@
             const urlParams = new URLSearchParams(window.location.search);
             const hwidFromUrl = urlParams.get('hwid');
             const adminPass = urlParams.get('admin');
-            const referrer = document.referrer.toLowerCase();
+            const tokenFromUrl = urlParams.get('token');
 
             isAdminUser = (adminPass === ADMIN_PASS);
-            const isFromShortener = (referrer && referrer.includes(SHORTENER_DOMAIN));
+            const isFromShortener = (tokenFromUrl === SECRET_TOKEN);
 
             if (isAdminUser) {
                 document.getElementById('adminBadge').style.display = 'inline-block';
