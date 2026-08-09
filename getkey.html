@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMG Admin - Key Generator</title>
+    <title>TMG Admin - Key Chung Vô Hạn Thiết Bị</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
@@ -14,8 +14,8 @@
         p.subtitle { font-size: 13px; color: #aaa; margin-bottom: 20px; }
         .input-group { text-align: left; margin-bottom: 15px; }
         label { display: block; font-size: 13px; color: #bbb; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background-color: #2a2a2a; color: #fff; font-size: 14px; outline: none; }
-        input:focus, select:focus { border-color: #00e676; }
+        select { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background-color: #2a2a2a; color: #fff; font-size: 14px; outline: none; }
+        select:focus { border-color: #00e676; }
         button { width: 100%; padding: 12px; background-color: #00e676; border: none; border-radius: 6px; color: #000; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 5px; }
         button:hover { background-color: #00c853; }
         .result-box { margin-top: 20px; padding: 15px; background-color: #252525; border-radius: 8px; border: 1px dashed #00e676; display: none; }
@@ -27,17 +27,12 @@
 <body>
 
     <div class="container">
-        <div class="admin-badge">PANEL ADMIN</div>
+        <div class="admin-badge">KEY CHUNG MỌI THIẾT BỊ</div>
         <h2>TMG KEY GENERATOR</h2>
-        <p class="subtitle">Tạo Key xác minh tùy chỉnh cho thiết bị</p>
+        <p class="subtitle">Tạo Key dùng chung cho tất cả các máy</p>
 
         <div class="input-group">
-            <label for="hwid">Mã HWID của máy:</label>
-            <input type="text" id="hwid" placeholder="Dán mã HWID vào đây...">
-        </div>
-
-        <div class="input-group">
-            <label for="expireHours">Thời hạn Key:</label>
+            <label for="expireHours">Chọn thời hạn cho Key:</label>
             <select id="expireHours">
                 <option value="4">4 Tiếng</option>
                 <option value="8">8 Tiếng</option>
@@ -53,14 +48,13 @@
         <button onclick="processGetKey()">TẠO KEY NGAY</button>
 
         <div class="result-box" id="resultBox">
-            <div class="key-title">KEY CỦA BẠN:</div>
+            <div class="key-title">KEY DÙNG CHUNG CHO MỌI MÁY:</div>
             <div class="key-display" id="keyOutput">---</div>
             <button class="btn-copy" onclick="copyKey()">Sao Chép Key</button>
         </div>
     </div>
 
     <script>
-        // Định dạng thời gian dạng YYYYMMDDHH (Năm-Tháng-Ngày-Giờ)
         function formatDate(dateObj) {
             const year = dateObj.getFullYear();
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -69,30 +63,22 @@
             return `${year}${month}${day}${hour}`;
         }
 
-        function generateKey(hwidValue, hoursToAdd) {
-            const secretSalt = "@TMG_Key_2026";
+        function generateKey(hoursToAdd) {
+            const secretSalt = "@TMG_Universal_Key_2026"; // Chuỗi bảo mật chung
             const expireDate = new Date();
-            
-            // Cộng thêm số giờ đã chọn
             expireDate.setHours(expireDate.getHours() + parseInt(hoursToAdd));
             const expireStr = formatDate(expireDate);
 
-            // Tạo mã MD5 xác minh
-            const rawString = hwidValue + expireStr + secretSalt;
+            // Không cần HWID, chỉ tạo mã dựa trên thời gian hết hạn + chuỗi muối
+            const rawString = expireStr + secretSalt;
             const hash = CryptoJS.MD5(rawString).toString().substring(0, 8).toUpperCase();
 
             return `KEY-${expireStr}-${hash}`;
         }
 
         function processGetKey() {
-            const hwidInput = document.getElementById('hwid').value.trim();
-            if (!hwidInput) {
-                alert('Vui lòng nhập mã HWID!');
-                return;
-            }
-
             const hours = document.getElementById('expireHours').value;
-            const generatedKey = generateKey(hwidInput, hours);
+            const generatedKey = generateKey(hours);
 
             document.getElementById('keyOutput').innerText = generatedKey;
             document.getElementById('resultBox').style.display = 'block';
@@ -104,16 +90,6 @@
                 alert('Đã sao chép Key thành công!');
             });
         }
-
-        // Tự động điền HWID nếu có tham số ?hwid= trên URL
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const hwidFromUrl = urlParams.get('hwid');
-            if (hwidFromUrl) {
-                document.getElementById('hwid').value = hwidFromUrl;
-                processGetKey();
-            }
-        });
     </script>
 
 </body>
