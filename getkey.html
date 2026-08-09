@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMG Auto Get Key</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #121212; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { background-color: #1e1e1e; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); width: 100%; max-width: 400px; text-align: center; border: 1px solid #333; }
+        h2 { color: #00e676; margin-bottom: 8px; }
+        p.subtitle { font-size: 13px; color: #aaa; margin-bottom: 20px; }
+        .input-group { text-align: left; margin-bottom: 15px; }
+        label { display: block; font-size: 13px; color: #bbb; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px; background-color: #2a2a2a; color: #fff; font-size: 14px; outline: none; }
+        input:focus, select:focus { border-color: #00e676; }
+        button { width: 100%; padding: 12px; background-color: #00e676; border: none; border-radius: 6px; color: #000; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 5px; }
+        button:hover { background-color: #00c853; }
+        .result-box { margin-top: 20px; padding: 15px; background-color: #252525; border-radius: 8px; border: 1px dashed #00e676; display: none; }
+        .key-title { font-size: 12px; color: #888; margin-bottom: 5px; }
+        .key-display { font-size: 20px; font-weight: bold; color: #00e676; letter-spacing: 1px; margin-bottom: 10px; word-break: break-all; }
+        .btn-copy { background-color: #333; color: #fff; padding: 8px; font-size: 13px; }
+        .admin-badge { background: #ff9800; color: #000; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="adminBadge" class="admin-badge" style="display:none;">CHẾ ĐỘ ADMIN</div>
+        <h2>TMG GET KEY</h2>
+        <p class="subtitle" id="subText">Nhập HWID thiết bị của bạn để lấy Key xác minh</p>
+
+        <div class="input-group">
+            <label for="hwid">Mã HWID của khách:</label>
+            <input type="text" id="hwid" placeholder="Dán HWID từ App vào đây...">
+        </div>
+
+        <!-- Ô chọn thời hạn (Chỉ hiện khi ở Chế độ Admin) -->
+        <div class="input-group" id="adminDaysGroup" style="display:none;">
+            <label for="expireDays">Thời hạn gia hạn:</label>
+            <select id="expireDays">
+                <option value="1">1 Ngày (Mặc định)</option>
+                <option value="3">3 Ngày</option>
+                <option value="7">7 Ngày (1 Tuần)</option>
+                <option value="30">30 Ngày (1 Tháng)</option>
+                <option value="365">365 Ngày (1 Năm)</option>
+                <option value="3650">Vĩnh Viễn (10 Năm)</option>
+            </select>
+        </div>
+
+        <button onclick="processGetKey()">LẤY KEY NGAY</button>
+
+        <div class="result-box" id="resultBox">
+            <div class="key-title">KEY XÁC MINH:</div>
+            <div class="key-display" id="keyOutput">---</div>
+            <button class="btn-copy" onclick="copyKey()">Sao Chép Key</button>
+        </div>
+    </div>
+
+    <script>
+        const SHORTENER_DOMAIN = "link4m"; // Tên miền trang rút gọn link
+        const ADMIN_PASS = "1234";          // Mật khẩu Admin
+        let isAdminUser = false;
+
+        // Định dạng ngày YYYYMMDD
+        function formatDate(dateObj) {
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}${month}${day}`;
+        }
+
+        // Tính toán Key chuẩn: KEY-[YYYYMMDD_HẾT_HẠN]-[HASH8]
+        function generateKey(hwidValue, daysToAdd) {
+            const secretSalt = "@TMG_Key_2026";
+            
+            // Tính ngày hết hạn
+            const expireDate = new Date();
+            expireDate.setDate(expireDate.getDate() + (parseInt(daysToAdd) - 1));
+            const expireStr = formatDate(expireDate);
+
+            // Tạo mã Hash MD5 từ HWID + Ngày hết hạn + Salt
+            const rawString = hwidValue + expireStr + secretSalt;
+            const hash = CryptoJS.MD5(rawString).toString().substring(0, 8).toUpperCase();
+
+            return `KEY-${expireStr}-${hash}`;
+        }
+
+        function processGetKey() {
+            const hwidInput = document.getElementById('hwid').value.trim();
+            if (!hwidInput) {
+                alert('Vui lòng nhập mã HWID!');
+                return;
+            }
+
+            const days = isAdminUser ? document.getElementById('expireDays').value : 1;
+            const generatedKey = generateKey(hwidInput, days);
+
+            document.getElementById('keyOutput').innerText = generatedKey;
+            document.getElementById('resultBox').style.display = 'block';
+        }
+
+        function copyKey() {
+            const keyText = document.getElementById('keyOutput').innerText;
+            navigator.clipboard.writeText(keyText).then(() => {
+                alert('Đã sao chép Key thành công!');
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hwidFromUrl = urlParams.get('hwid');
+            const adminPass = urlParams.get('admin');
+            const referrer = document.referrer.toLowerCase();
+
+            isAdminUser = (adminPass === ADMIN_PASS);
+            const isFromShortener = (referrer && referrer.includes(SHORTENER_DOMAIN));
+
+            if (isAdminUser) {
+                document.getElementById('adminBadge').style.display = 'inline-block';
+                document.getElementById('adminDaysGroup').style.display = 'block';
+                document.getElementById('subText').innerText = 'Tạo Key tùy chỉnh thời hạn cho khách';
+            } else if (!isFromShortener) {
+                document.body.innerHTML = `
+                    <div style="background:#121212; color:#ff5252; text-align:center; padding:50px 20px; font-family:sans-serif; min-height:100vh;">
+                        <h2 style="font-size:24px; margin-bottom:10px;">❌ TỪ CHỐI TRUY CẬP!</h2>
+                        <p style="color:#ccc; font-size:15px;">Vui lòng bấm nút Get Key trong App để vượt link ủng hộ Admin nhé!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (hwidFromUrl) {
+                document.getElementById('hwid').value = hwidFromUrl;
+                processGetKey();
+            }
+        });
+    </script>
+
+</body>
+</html>
