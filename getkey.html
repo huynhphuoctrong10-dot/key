@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -23,7 +23,7 @@
             <button onclick="goToLink4M()">BẤM VÀO ĐÂY ĐỂ VƯỢT LINK</button>
         </div>
 
-        <!-- KHỐI MỞ KHÓA (CHỈ TỒN TẠI ĐÚNG 1 PHÚT VÀ 1 LẦN DUY NHẤT) -->
+        <!-- KHỐI MỞ KHÓA (CHỈ TỒN TẠI ĐÚNG 30 GIÂY VÀ 1 LẦN DUY NHẤT) -->
         <div id="unlockSection" class="hidden">
             <p style="font-size: 13px; color: #ccc;">Mã Key Độc Quyền Của Bạn:</p>
             <h1 id="keyDisplay">Đang tạo...</h1>
@@ -44,8 +44,8 @@
 
         // 1. Kiểm tra xem có đúng là đi từ Link4M sang không (Phải mang pass chuẩn)
         if (urlParams.get("pass") === "tmg2026") {
-            // Cấp phiên làm việc nghiêm ngặt đúng 60 giây (1 phút)
-            let sessionExpiry = now + (60 * 1000);
+            // Cấp phiên làm việc nghiêm ngặt đúng 30 giây
+            let sessionExpiry = now + (30 * 1000);
             localStorage.setItem("tmg_strict_session", sessionExpiry);
             
             // Xóa sạch pass trên URL ngay lập tức để chống copy link
@@ -58,7 +58,7 @@
         let timeLeft = sessionExpiry ? parseInt(sessionExpiry) - now : 0;
 
         if (sessionExpiry && timeLeft > 0) {
-            // Còn trong thời hạn 1 phút -> Mở khóa giao diện
+            // Còn trong thời hạn 30 giây -> Mở khóa giao diện
             document.getElementById("lockSection").classList.add("hidden");
             document.getElementById("unlockSection").classList.remove("hidden");
 
@@ -77,13 +77,13 @@
             
             document.getElementById("keyDisplay").innerText = finalKey;
 
-            // Đồng hồ đếm ngược 1 phút trên màn hình
+            // Đồng hồ đếm ngược 30 giây trên màn hình
             let timerInterval = setInterval(() => {
                 let remaining = parseInt(localStorage.getItem("tmg_strict_session")) - new Date().getTime();
                 if (remaining <= 0) {
                     clearInterval(timerInterval);
                     localStorage.removeItem("tmg_strict_session");
-                    location.reload(); // Hết 1 phút tự động khóa sập
+                    location.reload(); // Hết 30 giây tự động khóa sập
                 } else {
                     let seconds = Math.ceil(remaining / 1000);
                     document.getElementById("timer").innerText = "Thời gian thao tác còn lại: " + seconds + " giây";
@@ -91,7 +91,7 @@
             }, 1000);
 
         } else {
-            // Không có phiên hoặc đã hết 1 phút -> Khóa cứng hoàn toàn
+            // Không có phiên hoặc đã hết 30 giây -> Khóa cứng hoàn toàn
             localStorage.removeItem("tmg_strict_session");
             document.getElementById("lockSection").classList.remove("hidden");
             document.getElementById("unlockSection").classList.add("hidden");
