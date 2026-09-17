@@ -17,13 +17,13 @@
     <div class="card">
         <h2>TMG MODS - LẤY KEY</h2>
 
-        <!-- KHỐI BỊ KHÓA (NẾU CỐ TÌNH VÀO TRỰC TIẾP HOẶC GÕ LINK BẬY) -->
+        <!-- KHỐI BỊ KHÓA -->
         <div id="lockSection">
             <p style="font-size: 14px; color: #ffcccc; margin: 15px 0;">Vui lòng vượt link rút gọn từ Link4M để lấy key!</p>
             <button onclick="goToLink4M()">BẤM VÀO ĐÂY ĐỂ VƯỢT LINK</button>
         </div>
 
-        <!-- KHỐI MỞ KHÓA (CHỈ TỒN TẠI ĐÚNG 30 GIÂY VÀ 1 LẦN DUY NHẤT) -->
+        <!-- KHỐI MỞ KHÓA (30 GIÂY VÀ 1 LẦN DUY NHẤT) -->
         <div id="unlockSection" class="hidden">
             <p style="font-size: 13px; color: #ccc;">Mã Key Độc Quyền Của Bạn:</p>
             <h1 id="keyDisplay">Đang tạo...</h1>
@@ -39,18 +39,17 @@
         const LINK4M_URL = "https://link4m.co/AbCd123"; 
         const SECRET = "TRONGMODS_SECRET_KEY";
 
-        const urlParams = new URLSearchParams(window.location.search);
         const now = new Date().getTime();
+        const userHash = window.location.hash; // Lấy mã phía sau dấu #
 
-        // 1. Kiểm tra xem có đúng là đi từ Link4M sang không (Phải mang pass chuẩn)
-        if (urlParams.get("pass") === "tmg2026") {
-            // Cấp phiên làm việc nghiêm ngặt đúng 30 giây
-            let sessionExpiry = now + (30 * 1000);
+        // 1. Nếu từ Link4M sang mang theo #tmg2026
+        if (userHash === "#tmg2026") {
+            let sessionExpiry = now + (30 * 1000); // Cấp phiên 30 giây
             localStorage.setItem("tmg_strict_session", sessionExpiry);
             
-            // Xóa sạch pass trên URL ngay lập tức để chống copy link
-            window.history.replaceState({}, document.title, window.location.pathname);
-            window.location.href = window.location.pathname;
+            // Xóa sạch dấu # trên URL để chống copy
+            history.replaceState(null, document.title, window.location.pathname);
+            location.reload();
         }
 
         // 2. Kiểm tra thời hạn phiên làm việc
@@ -58,13 +57,12 @@
         let timeLeft = sessionExpiry ? parseInt(sessionExpiry) - now : 0;
 
         if (sessionExpiry && timeLeft > 0) {
-            // Còn trong thời hạn 30 giây -> Mở khóa giao diện
             document.getElementById("lockSection").classList.add("hidden");
             document.getElementById("unlockSection").classList.remove("hidden");
 
             // Tự động sinh key cá nhân
             let randomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-            let keyExpiryTime = now + (4 * 60 * 60 * 1000); // Key app hạn 4 tiếng
+            let keyExpiryTime = now + (4 * 60 * 60 * 1000); // Hạn 4 tiếng
             
             let rawData = keyExpiryTime + "_" + randomId + "_" + SECRET;
             let hash = 0;
@@ -77,13 +75,13 @@
             
             document.getElementById("keyDisplay").innerText = finalKey;
 
-            // Đồng hồ đếm ngược 30 giây trên màn hình
+            // Đồng hồ đếm ngược 30 giây
             let timerInterval = setInterval(() => {
                 let remaining = parseInt(localStorage.getItem("tmg_strict_session")) - new Date().getTime();
                 if (remaining <= 0) {
                     clearInterval(timerInterval);
                     localStorage.removeItem("tmg_strict_session");
-                    location.reload(); // Hết 30 giây tự động khóa sập
+                    location.reload();
                 } else {
                     let seconds = Math.ceil(remaining / 1000);
                     document.getElementById("timer").innerText = "Thời gian thao tác còn lại: " + seconds + " giây";
@@ -91,7 +89,6 @@
             }, 1000);
 
         } else {
-            // Không có phiên hoặc đã hết 30 giây -> Khóa cứng hoàn toàn
             localStorage.removeItem("tmg_strict_session");
             document.getElementById("lockSection").classList.remove("hidden");
             document.getElementById("unlockSection").classList.add("hidden");
@@ -106,8 +103,6 @@
             if(keyText.startsWith("TMG-")) {
                 navigator.clipboard.writeText(keyText);
                 alert("Đã sao chép key thành công! Quyền truy cập đã bị thu hồi.");
-                
-                // 🚨 HỦY VÉ NGAY LẬP TỨC - CHỈ ĐƯỢC 1 LẦN DUY NHẤT, MUỐN TẠO MỚI PHẢI QUA LINK4M LẠI
                 localStorage.removeItem("tmg_strict_session");
                 location.reload();
             } else {
