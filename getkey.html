@@ -1,101 +1,70 @@
- <!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMG MODS - Hệ Thống Lấy Key</title>
-    <style>
-        body { background: #0f0f0f; color: #fff; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        .card { background: #1a1a1a; border: 1px solid #ff3333; padding: 25px; border-radius: 12px; display: inline-block; max-width: 90%; width: 350px; }
-        input { width: 90%; padding: 10px; margin: 10px 0; background: #121212; border: 1px solid #444; color: #00ffcc; border-radius: 6px; text-align: center; font-size: 14px; }
-        h1 { color: #00ffcc; margin: 15px 0; font-size: 18px; word-break: break-all; }
-        button { background: #ff3333; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 15px; margin-top: 5px; }
-        .note { margin-top: 12px; font-size: 12px; color: #888; }
-        .hidden { display: none; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2>TMG MODS - LẤY KEY</h2>
+ <script>
+    // 👉 ĐIỀN LINK RÚT GỌN (LINK4M) CỦA BẠN VÀO ĐÂY:
+    const LINK4M_URL = "https://link4m.co/AbCd123"; 
 
-        <!-- KHỐI 1: BỊ KHÓA NẾU VÀO TRỰC TIẾP -->
-        <div id="lockSection">
-            <p style="font-size: 14px; color: #ffcccc; margin: 15px 0;">Bạn chưa vượt link rút gọn! Vui lòng bấm vào nút bên dưới để lấy link.</p>
-            <button onclick="goToLink4M()">BẤM VÀO ĐÂY ĐỂ VƯỢT LINK</button>
-        </div>
+    const SECRET = "TRONGMODS_SECRET_KEY";
+    const urlParams = new URLSearchParams(window.location.search);
+    const now = new Date().getTime();
 
-        <!-- KHỐI 2: ĐÃ VƯỢT LINK (HIỆN Ô NHẬP HWID ĐỂ TẠO KEY) -->
-        <div id="unlockSection" class="hidden">
-            <p style="font-size: 13px; color: #ccc; margin-top: 5px;">Nhập HWID từ ứng dụng của bạn:</p>
-            <input type="text" id="hwidInput" placeholder="Dán HWID vào đây...">
-            <button onclick="generateKey()">TẠO MÃ KEY 4 TIẾNG</button>
-            
-            <h1 id="keyDisplay">CHƯA TẠO</h1>
-            <button onclick="copyKey()" style="background:#222; border:1px solid #ff3333;">SAO CHÉP KEY</button>
-        </div>
+    // 1. NẾU VỪA TỪ LINK4M NHẢY VỀ (Có kèm mã pass)
+    if (urlParams.get("pass") === "tmg2026") {
+        // Cấp vé có hiệu lực trong vòng 3 phút (3 * 60 * 1000 ms)
+        let expireTokenTime = now + (3 * 60 * 1000); 
+        localStorage.setItem("link4m_ticket", expireTokenTime);
+        
+        // Xóa sạch chữ ?pass=tmg2026 trên thanh URL để chống copy link lưu bookmark
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
-        <div class="note">Hệ thống bảo mật chống gian lận tự động.</div>
-    </div>
+    // 2. KIỂM TRA XEM VÉ CÒN HẠN KHÔNG (Chỉ tồn tại trong 3 phút sau khi vượt link)
+    let ticketExpiry = localStorage.getItem("link4m_ticket");
+    if (ticketExpiry && now < parseInt(ticketExpiry)) {
+        // Vé còn hạn -> Mở khóa giao diện nhập HWID
+        document.getElementById("lockSection").classList.add("hidden");
+        document.getElementById("unlockSection").classList.remove("hidden");
+    } else {
+        // Hết 3 phút hoặc chưa vượt link -> Khóa cứng lại!
+        document.getElementById("lockSection").classList.remove("hidden");
+        document.getElementById("unlockSection").classList.add("hidden");
+    }
 
-    <script>
-        // 👉 ĐIỀN LINK RÚT GỌN (LINK4M) CỦA BẠN VÀO DƯỚI ĐÂY:
-        const LINK4M_URL = "DÁN_LINK_RÚT_GỌN_LINK4M_CỦA_BẠN_VÀO_ĐÂY";
+    function goToLink4M() {
+        window.location.href = LINK4M_URL;
+    }
 
-        const SECRET = "TRONGMODS_SECRET_KEY";
-        const urlParams = new URLSearchParams(window.location.search);
+    function simpleHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash).toString(36).toUpperCase();
+    }
 
-        // Nếu khách vừa vượt link Link4M thành công và quay lại trang web kèm mã bí mật
-        if (urlParams.get("pass") === "tmg2026") {
-            sessionStorage.setItem("unlocked", "true");
-            // Xóa sạch mã trên thanh địa chỉ URL cho đẹp
-            window.history.replaceState({}, document.title, window.location.pathname);
+    function generateKey() {
+        let hwid = document.getElementById("hwidInput").value.trim();
+        if(!hwid || hwid.length < 5) {
+            alert("Vui lòng nhập đúng HWID từ app!");
+            return;
         }
 
-        // Kiểm tra xem đã mở khóa trong phiên này chưa
-        if (sessionStorage.getItem("unlocked") === "true") {
-            document.getElementById("lockSection").classList.add("hidden");
-            document.getElementById("unlockSection").classList.remove("hidden");
+        let expiryTime = now + (4 * 60 * 60 * 1000); // Key app có hạn 4 tiếng
+        
+        let rawData = expiryTime + "_" + hwid + "_" + SECRET;
+        let signature = simpleHash(rawData);
+
+        let finalKey = "TMG-" + expiryTime.toString(36).toUpperCase() + "-" + hwid.substring(0, 5) + "-" + signature;
+        document.getElementById("keyDisplay").innerText = finalKey;
+    }
+
+    function copyKey() {
+        let keyText = document.getElementById("keyDisplay": document.getElementById("keyDisplay").innerText); // fix typo
+        let keyDisplay = document.getElementById("keyDisplay").innerText;
+        if(keyDisplay.startsWith("TMG-")) {
+            navigator.clipboard.writeText(keyDisplay);
+            alert("Đã sao chép key độc quyền!");
+        } else {
+            alert("Bạn chưa tạo key!");
         }
-
-        function goToLink4M() {
-            window.location.href = LINK4M_URL;
-        }
-
-        function simpleHash(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = ((hash << 5) - hash) + str.charCodeAt(i);
-                hash |= 0;
-            }
-            return Math.abs(hash).toString(36).toUpperCase();
-        }
-
-        function generateKey() {
-            let hwid = document.getElementById("hwidInput").value.trim();
-            if(!hwid || hwid.length < 5) {
-                alert("Vui lòng nhập đúng HWID từ app!");
-                return;
-            }
-
-            let now = new Date().getTime();
-            let expiryTime = now + (4 * 60 * 60 * 1000); // 4 tiếng
-            
-            let rawData = expiryTime + "_" + hwid + "_" + SECRET;
-            let signature = simpleHash(rawData);
-
-            let finalKey = "TMG-" + expiryTime.toString(36).toUpperCase() + "-" + hwid.substring(0, 5) + "-" + signature;
-            document.getElementById("keyDisplay").innerText = finalKey;
-        }
-
-        function copyKey() {
-            let keyText = document.getElementById("keyDisplay").innerText;
-            if(keyText.startsWith("TMG-")) {
-                navigator.clipboard.writeText(keyText);
-                alert("Đã sao chép key độc quyền!");
-            } else {
-                alert("Bạn chưa tạo key!");
-            }
-        }
-    </script>
-</body>
-</html>
+    }
+</script>
