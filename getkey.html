@@ -1,76 +1,101 @@
-
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lấy Key Vượt Link - Mod Menu</title>
+    <title>TMG MODS - Hệ Thống Lấy Key</title>
     <style>
-        body { 
-            background: #121212; 
-            color: #ffffff; 
-            font-family: sans-serif; 
-            text-align: center; 
-            padding-top: 60px; 
-        }
-        .container { 
-            background: #1e1e1e; 
-            padding: 25px; 
-            border-radius: 12px; 
-            display: inline-block; 
-            border: 1px solid #333;
-            max-width: 90%;
-        }
-        h1 { color: #ff4757; font-size: 24px; word-break: break-all; }
-        button { 
-            background: #ff4757; 
-            color: white; 
-            border: none; 
-            padding: 12px 25px; 
-            font-weight: bold; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            margin-top: 15px; 
-            font-size: 16px;
-        }
-        button:active { background: #e84118; }
+        body { background: #0f0f0f; color: #fff; font-family: sans-serif; text-align: center; padding-top: 50px; }
+        .card { background: #1a1a1a; border: 1px solid #ff3333; padding: 25px; border-radius: 12px; display: inline-block; max-width: 90%; width: 350px; }
+        input { width: 90%; padding: 10px; margin: 10px 0; background: #121212; border: 1px solid #444; color: #00ffcc; border-radius: 6px; text-align: center; font-size: 14px; }
+        h1 { color: #00ffcc; margin: 15px 0; font-size: 18px; word-break: break-all; }
+        button { background: #ff3333; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 15px; margin-top: 5px; }
+        .note { margin-top: 12px; font-size: 12px; color: #888; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
+    <div class="card">
+        <h2>TMG MODS - LẤY KEY</h2>
 
-    <h2>Mã Key Của Bạn Là:</h2>
-    <div class="container">
-        <h1 id="keyDisplay">Đang tải key...</h1>
+        <!-- KHỐI 1: BỊ KHÓA NẾU VÀO TRỰC TIẾP -->
+        <div id="lockSection">
+            <p style="font-size: 14px; color: #ffcccc; margin: 15px 0;">Bạn chưa vượt link rút gọn! Vui lòng bấm vào nút bên dưới để lấy link.</p>
+            <button onclick="goToLink4M()">BẤM VÀO ĐÂY ĐỂ VƯỢT LINK</button>
+        </div>
+
+        <!-- KHỐI 2: ĐÃ VƯỢT LINK (HIỆN Ô NHẬP HWID ĐỂ TẠO KEY) -->
+        <div id="unlockSection" class="hidden">
+            <p style="font-size: 13px; color: #ccc; margin-top: 5px;">Nhập HWID từ ứng dụng của bạn:</p>
+            <input type="text" id="hwidInput" placeholder="Dán HWID vào đây...">
+            <button onclick="generateKey()">TẠO MÃ KEY 4 TIẾNG</button>
+            
+            <h1 id="keyDisplay">CHƯA TẠO</h1>
+            <button onclick="copyKey()" style="background:#222; border:1px solid #ff3333;">SAO CHÉP KEY</button>
+        </div>
+
+        <div class="note">Hệ thống bảo mật chống gian lận tự động.</div>
     </div>
-    <br>
-    <button onclick="copyKey()">SAO CHÉP KEY</button>
 
     <script>
-        // 👉 THAY LINK RAW FILE keys.txt CỦA BẠN VÀO DƯỚI ĐÂY
-        const keyUrl = "ĐIỀN_LINK_RAW_GITHUB_CỦA_BẠN_VÀO_ĐÂY";
+        // 👉 ĐIỀN LINK RÚT GỌN (LINK4M) CỦA BẠN VÀO DƯỚI ĐÂY:
+        const LINK4M_URL = "DÁN_LINK_RÚT_GỌN_LINK4M_CỦA_BẠN_VÀO_ĐÂY";
 
-        fetch(keyUrl)
-            .then(response => response.text())
-            .then(data => {
-                // Tách các key theo dòng
-                let keys = data.split('\n').map(k => k.trim()).filter(k => k.length > 0);
-                if(keys.length > 0) {
-                    // Lấy ngẫu nhiên hoặc lấy dòng đầu tiên (ở đây lấy key đầu tiên)
-                    document.getElementById("keyDisplay").innerText = keys[0];
-                } else {
-                    document.getElementById("keyDisplay").innerText = "Hết key, vui lòng quay lại sau!";
-                }
-            })
-            .catch(err => {
-                document.getElementById("keyDisplay").innerText = "Lỗi kết nối tới server key!";
-            });
+        const SECRET = "TRONGMODS_SECRET_KEY";
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Nếu khách vừa vượt link Link4M thành công và quay lại trang web kèm mã bí mật
+        if (urlParams.get("pass") === "tmg2026") {
+            sessionStorage.setItem("unlocked", "true");
+            // Xóa sạch mã trên thanh địa chỉ URL cho đẹp
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // Kiểm tra xem đã mở khóa trong phiên này chưa
+        if (sessionStorage.getItem("unlocked") === "true") {
+            document.getElementById("lockSection").classList.add("hidden");
+            document.getElementById("unlockSection").classList.remove("hidden");
+        }
+
+        function goToLink4M() {
+            window.location.href = LINK4M_URL;
+        }
+
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash).toString(36).toUpperCase();
+        }
+
+        function generateKey() {
+            let hwid = document.getElementById("hwidInput").value.trim();
+            if(!hwid || hwid.length < 5) {
+                alert("Vui lòng nhập đúng HWID từ app!");
+                return;
+            }
+
+            let now = new Date().getTime();
+            let expiryTime = now + (4 * 60 * 60 * 1000); // 4 tiếng
+            
+            let rawData = expiryTime + "_" + hwid + "_" + SECRET;
+            let signature = simpleHash(rawData);
+
+            let finalKey = "TMG-" + expiryTime.toString(36).toUpperCase() + "-" + hwid.substring(0, 5) + "-" + signature;
+            document.getElementById("keyDisplay").innerText = finalKey;
+        }
 
         function copyKey() {
-            let text = document.getElementById("keyDisplay").innerText;
-            navigator.clipboard.writeText(text);
-            alert("Đã sao chép key thành công: " + text);
+            let keyText = document.getElementById("keyDisplay").innerText;
+            if(keyText.startsWith("TMG-")) {
+                navigator.clipboard.writeText(keyText);
+                alert("Đã sao chép key độc quyền!");
+            } else {
+                alert("Bạn chưa tạo key!");
+            }
         }
     </script>
-
 </body>
 </html>
