@@ -1,1 +1,76 @@
 
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lấy Key Vượt Link - Mod Menu</title>
+    <style>
+        body { 
+            background: #121212; 
+            color: #ffffff; 
+            font-family: sans-serif; 
+            text-align: center; 
+            padding-top: 60px; 
+        }
+        .container { 
+            background: #1e1e1e; 
+            padding: 25px; 
+            border-radius: 12px; 
+            display: inline-block; 
+            border: 1px solid #333;
+            max-width: 90%;
+        }
+        h1 { color: #ff4757; font-size: 24px; word-break: break-all; }
+        button { 
+            background: #ff4757; 
+            color: white; 
+            border: none; 
+            padding: 12px 25px; 
+            font-weight: bold; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            margin-top: 15px; 
+            font-size: 16px;
+        }
+        button:active { background: #e84118; }
+    </style>
+</head>
+<body>
+
+    <h2>Mã Key Của Bạn Là:</h2>
+    <div class="container">
+        <h1 id="keyDisplay">Đang tải key...</h1>
+    </div>
+    <br>
+    <button onclick="copyKey()">SAO CHÉP KEY</button>
+
+    <script>
+        // 👉 THAY LINK RAW FILE keys.txt CỦA BẠN VÀO DƯỚI ĐÂY
+        const keyUrl = "ĐIỀN_LINK_RAW_GITHUB_CỦA_BẠN_VÀO_ĐÂY";
+
+        fetch(keyUrl)
+            .then(response => response.text())
+            .then(data => {
+                // Tách các key theo dòng
+                let keys = data.split('\n').map(k => k.trim()).filter(k => k.length > 0);
+                if(keys.length > 0) {
+                    // Lấy ngẫu nhiên hoặc lấy dòng đầu tiên (ở đây lấy key đầu tiên)
+                    document.getElementById("keyDisplay").innerText = keys[0];
+                } else {
+                    document.getElementById("keyDisplay").innerText = "Hết key, vui lòng quay lại sau!";
+                }
+            })
+            .catch(err => {
+                document.getElementById("keyDisplay").innerText = "Lỗi kết nối tới server key!";
+            });
+
+        function copyKey() {
+            let text = document.getElementById("keyDisplay").innerText;
+            navigator.clipboard.writeText(text);
+            alert("Đã sao chép key thành công: " + text);
+        }
+    </script>
+
+</body>
+</html>
