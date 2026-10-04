@@ -23,9 +23,11 @@
             <button onclick="goToLink4M()">BẤM VÀO ĐÂY ĐỂ VƯỢT LINK</button>
         </div>
 
-        <!-- KHỐI MỞ KHÓA (30 GIÂY VÀ 1 LẦN DUY NHẤT) -->
+        <!-- KHỐI MỞ KHÓA -->
         <div id="unlockSection" class="hidden">
             <p style="font-size: 13px; color: #ccc;">Mã Key Độc Quyền Của Bạn:</p>
+            <p style="font-size: 13px; color: #00ffcc; font-weight: bold; margin: 8px 0;">⏰ Thời hạn sử dụng: 10 Tiếng</p>
+            
             <h1 id="keyDisplay">Đang tạo...</h1>
             <button onclick="copyKey()">SAO CHÉP & HOÀN TẤT</button>
             <p id="timer" style="font-size: 12px; color: #ff3333; margin-top: 8px;"></p>
@@ -35,23 +37,21 @@
     </div>
 
     <script>
-        // 👉 ĐIỀN LINK RÚT GỌN LINK4M CỦA BẠN VÀO ĐÂY:
-        const LINK4M_URL = "https://link4sub.com/qkKaBxdeaB"; 
+        // 👉 Đã cập nhật link rút gọn Link4M mới của em vào đây:
+        const LINK4M_URL = "https://link4m.org/z47n8Sa6"; 
         const SECRET = "TRONGMODS_SECRET_KEY";
 
         const urlParams = new URLSearchParams(window.location.search);
         const now = new Date().getTime();
 
-        // 1. Kiểm tra pass trên URL (Dùng ?pass=tmg2026)
         if (urlParams.get("pass") === "tmg2026") {
-            let sessionExpiry = now + (30 * 1000); // 30 giây
+            let sessionExpiry = now + (30 * 1000); 
             localStorage.setItem("tmg_strict_session", sessionExpiry);
             
             window.history.replaceState({}, document.title, window.location.pathname);
             window.location.href = window.location.pathname;
         }
 
-        // 2. Kiểm tra phiên làm việc
         let sessionExpiry = localStorage.getItem("tmg_strict_session");
         let timeLeft = sessionExpiry ? parseInt(sessionExpiry) - now : 0;
 
@@ -60,9 +60,7 @@
             document.getElementById("unlockSection").classList.remove("hidden");
 
             let randomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-            
-            // Đã đổi hạn sử dụng của key thành 10 tiếng ở đây:
-            let keyExpiryTime = now + (10 * 60 * 60 * 1000); 
+            let keyExpiryTime = now + (10 * 60 * 60 * 1000); // 10 tiếng
             
             let rawData = keyExpiryTime + "_" + randomId + "_" + SECRET;
             let hash = 0;
