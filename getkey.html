@@ -60,7 +60,9 @@
             document.getElementById("unlockSection").classList.remove("hidden");
 
             let randomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-            let keyExpiryTime = now + (4 * 60 * 60 * 1000); // Hạn 4 tiếng
+            
+            // Đã đổi hạn sử dụng của key thành 10 tiếng ở đây:
+            let keyExpiryTime = now + (10 * 60 * 60 * 1000); 
             
             let rawData = keyExpiryTime + "_" + randomId + "_" + SECRET;
             let hash = 0;
